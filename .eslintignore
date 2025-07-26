@@ -1,0 +1,7 @@
+node_modules
+.next
+dist
+app/generated
+prisma/generated
+public
+coverage

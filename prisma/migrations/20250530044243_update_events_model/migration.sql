@@ -1,0 +1,15 @@
+-- DropForeignKey
+ALTER TABLE "Event" DROP CONSTRAINT "Event_labelId_fkey";
+
+-- AlterTable
+ALTER TABLE "Event" ALTER COLUMN "color" DROP NOT NULL,
+ALTER COLUMN "day" DROP NOT NULL,
+ALTER COLUMN "timeStart" DROP NOT NULL,
+ALTER COLUMN "timeEnd" DROP NOT NULL,
+ALTER COLUMN "labelId" DROP NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Label" ALTER COLUMN "color" SET DEFAULT '#f97316';
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_labelId_fkey" FOREIGN KEY ("labelId") REFERENCES "Label"("id") ON DELETE SET NULL ON UPDATE CASCADE;

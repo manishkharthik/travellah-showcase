@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  name            String
+  password        String
+  createdAt       DateTime         @default(now())
+  image           String?
+  username        String?          @unique
+  messages        Message[]
+  createdPolls    Poll[]           @relation("PollCreator")
+  tasksAssigned   Task[]           @relation("TaskAssigner")
+  tasksToDo       TaskAssignee[]
+  trips           Trip[]
+  tripMemberships TripMembership[]
+  votes           Vote[]           @relation("UserVotes")
+}
+
+model Trip {
+  id              String           @id @default(cuid())
+  name            String
+  peopleInvited   String[]         @default([])
+  startDate       DateTime
+  endDate         DateTime
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userId          Int
+  events          Event[]
+  expenses        Expense[]
+  labels          Label[]
+  messages        Message[]
+  Photo           Photo[]
+  polls           Poll[]
+  tasks           Task[]
+  user            User             @relation(fields: [userId], references: [id])
+  tripMemberships TripMembership[]
+}
+
+model TripMembership {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  tripId    String
+  createdAt DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id             String   @id @default(cuid())
+  tripId         String
+  name           String
+  totalCost      Float
+  paidBy         Json
+  peopleInvolved String[]
+  owedBy         Json
+  transactions   Json
+  createdAt      DateTime @default(now())
+  category       String
+  status         String
+  trip           Trip     @relation(fields: [tripId], references: [id])
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#f97316")
+  tripId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Event     Event[]
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id              String    @id @default(cuid())
+  name            String
+  color           String?   @default("#f97316")
+  day             DateTime?
+  timeStart       String?
+  timeEnd         String?
+  tripId          String
+  originalEventId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  labelId         String?
+  notes           String?
+  location        Json?
+  label           Label?    @relation(fields: [labelId], references: [id])
+  trip            Trip      @relation(fields: [tripId], references: [id])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  senderId  Int
+  tripId    String
+  replyToId String?
+  type      String?   @default("text")
+  replyTo   Message?  @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies   Message[] @relation("ReplyTo")
+  sender    User      @relation(fields: [senderId], references: [id])
+  trip      Trip      @relation(fields: [tripId], references: [id])
+}
+
+model Poll {
+  id            String       @id @default(cuid())
+  title         String
+  creatorId     Int
+  tripId        String
+  createdAt     DateTime     @default(now())
+  allowMultiple Boolean?
+  creator       User         @relation("PollCreator", fields: [creatorId], references: [id])
+  trip          Trip         @relation(fields: [tripId], references: [id])
+  options       PollOption[]
+  votes         Vote[]       @relation("PollVotes")
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  text   String
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id])
+  votes  Vote[]
+}
+
+model Vote {
+  id       String     @id @default(cuid())
+  userId   Int
+  pollId   String
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id])
+  poll     Poll       @relation("PollVotes", fields: [pollId], references: [id])
+  user     User       @relation("UserVotes", fields: [userId], references: [id])
+}
+
+model Task {
+  id          String         @id @default(dbgenerated("gen_random_uuid()"))
+  title       String
+  assignerId  Int
+  createdAt   DateTime?      @default(now()) @db.Timestamp(6)
+  dueBy       DateTime       @db.Timestamp(6)
+  completed   Boolean?       @default(false)
+  completedAt DateTime?      @db.Timestamp(6)
+  tripId      String
+  description String
+  trip        Trip           @relation(fields: [tripId], references: [id])
+  assigner    User           @relation("TaskAssigner", fields: [assignerId], references: [id], map: "fk_task_assigner")
+  assignees   TaskAssignee[]
+}
+
+model TaskAssignee {
+  taskId String
+  userId Int
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, map: "fk_taskassignee_task")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_taskassignee_user")
+
+  @@id([taskId, userId])
+}
+
+model Photo {
+  id        String    @id @default(dbgenerated("gen_random_uuid()"))
+  tripId    String
+  day       DateTime  @db.Timestamptz(6)
+  caption   String?
+  imageUrl  String
+  createdAt DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime? @default(now()) @db.Timestamptz(6)
+  Trip      Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "Photo_tripid_fkey")
+}
