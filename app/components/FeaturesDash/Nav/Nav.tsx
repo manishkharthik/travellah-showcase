@@ -17,7 +17,7 @@ type NavProps = {
   tripName: string;
   startDate: string;
   endDate: string;
-}
+};
 
 const Nav: React.FC<NavProps> = ({ tripId, tripName, startDate, endDate }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

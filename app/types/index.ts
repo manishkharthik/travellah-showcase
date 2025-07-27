@@ -34,3 +34,16 @@ export interface MainCardProps extends TripButtonPopupProp {
     trips: Trip[];  
      setTrips: React.Dispatch<React.SetStateAction<Trip[]>>;
 }
+
+export interface EventData {
+  id: string;
+  name: string;
+  labelId?: string;
+  day?: string | null | undefined;
+  color: string;
+  timeStart?: string | null | undefined;
+  timeEnd?: string | null | undefined;
+  originalEventId?: string | null | undefined;
+  notes?: string | null;
+  location?: any;
+}

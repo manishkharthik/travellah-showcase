@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { getRequiredEnvVar } from '@/lib/env';
 
 export async function POST(req: NextRequest) {
-    try {
+  try {
         const JWT_SECRET = getRequiredEnvVar('JWT_SECRET');
         
         const body = await req.json();
@@ -17,17 +17,17 @@ export async function POST(req: NextRequest) {
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
-        if (existingUser) {
+    if (existingUser) {
             return NextResponse.json({ error: 'User already exists' }, { status: 409 });
-        }
+    }
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
         const user = await prisma.user.create({
-            data: {
+      data: {
                 name,
-                email,
-                password: hashedPassword,
+        email,
+        password: hashedPassword,
             },
         });
 
@@ -47,6 +47,6 @@ export async function POST(req: NextRequest) {
           console.error('Error message:', error.message);
           console.error('Error stack:', error.stack);
         }
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

@@ -15,16 +15,29 @@ interface EventData {
   labelId?: string;
   date?: string; // Optional but useful for display
   startTime?: string; // e.g. "14:00"
-  day?: string; // e.g. "2025-06-06"
+  day?: string | null | undefined; // e.g. "20256-6timeStart?: string | null | undefined;
+  timeEnd?: string | null | undefined;
   color: string;
+  originalEventId?: string | null | undefined;
 }
 
 interface EventManagerProps {
   tripId: string | null;
   labels: Label[];
+  refreshKey?: number;
+  filteredEvents?: EventData[];
+  onEventCreated?: () => void; // Callback to notify parent
+  onEventDoubleClick?: (event: EventData) => void;
 }
 
-const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
+const EventManager: React.FC<EventManagerProps> = ({
+  tripId,
+  labels,
+  refreshKey,
+  filteredEvents,
+  onEventCreated,
+  onEventDoubleClick,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [events, setEvents] = useState<EventData[]>([]);
@@ -65,15 +78,15 @@ const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
       }
     };
     fetchEvents();
-  }, [tripId]);
+  }, [tripId, refreshKey]);
 
   const handleDragStart = (e: React.DragEvent, event: EventData) => {
     e.dataTransfer.setData(
       "application/json",
       JSON.stringify({
-        id: event.id,
-        name: event.name,
-        labelId: event.labelId,
+        ...event,
+        source: "eventManager",
+        isCopy: true, // Mark this as a copy operation
       })
     );
   };
@@ -105,6 +118,7 @@ const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
       setEvents(data.data || []);
 
       setIsOpen(false);
+      onEventCreated?.(); // Trigger parent refresh
     } catch (err) {
       console.error("Failed to save event:", err);
     }
@@ -121,19 +135,20 @@ const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
 
     return brightness > 155 ? "text-orange-950" : "text-white"; // 186 is a good threshold
   };
-
+  // Use filteredEvents if provided, otherwise use local state
+  const displayEvents = filteredEvents ?? events;
   return (
     <div
       className={`flex text-lg basis-5/6 relative px-4 py-4 
         ${
-          events.length === 0
+          displayEvents.length === 0
             ? "justify-center items-center"
             : "flex-row items-start justify-start"
         }
     `}
     >
       {/* Empty state */}
-      {!isOpen && events.length === 0 && (
+      {!isOpen && displayEvents.length === 0 && (
         <button
           onClick={handleOpenForm}
           className="text-orange-950 text-lg text-center font-bold hover:underline"
@@ -144,7 +159,7 @@ const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
 
       {/* Events Row */}
       <div className="flex flex-row flex-wrap items-start gap-2">
-        {events.map((event) => {
+        {displayEvents.map((event) => {
           const label = labels.find((l) => l.id === event.labelId);
           const bgColor = label ? label.color : "#f97316"; // fallback to default color
           const textColor = getTextColor(bgColor);
@@ -156,13 +171,16 @@ const EventManager: React.FC<EventManagerProps> = ({ tripId, labels }) => {
               onDragStart={(e) => handleDragStart(e, event)}
               className={`h-15 w-37 border border-orange-950 rounded-md flex items-center justify-center text-sm shadow-md ${textColor} hover: cursor-pointer`}
               style={{ backgroundColor: bgColor }}
+              onDoubleClick={() =>
+                onEventDoubleClick && onEventDoubleClick(event)
+              }
             >
               {event.name}
             </button>
           );
         })}
 
-        {!isOpen && events.length > 0 && (
+        {!isOpen && displayEvents.length > 0 && (
           <button
             onClick={handleOpenForm}
             className="w-8 h-8 bg-orange-100 text-orange-950 rounded-full border border-orange-950 text-md font-bold hover:bg-orange-200"

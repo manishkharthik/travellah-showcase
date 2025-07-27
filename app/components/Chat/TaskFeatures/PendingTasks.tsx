@@ -29,7 +29,6 @@ interface AssignTaskProps {
 export default function PendingTasks({ includedTasks, currentUser, onTaskCompleted, onTaskDeleted }: AssignTaskProps) {
   const userTasks = includedTasks?.filter((task) => task.assignees.some((assignee) => assignee.user.id === currentUser?.id))
   const otherTasks = includedTasks?.filter((task) => !task.assignees.some((assignee) => assignee.user.id === currentUser?.id));
-  console.log("Task assignees are: ", includedTasks?.map((task) => task.assignees));
 
   return (
     <div>

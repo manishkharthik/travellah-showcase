@@ -27,7 +27,26 @@ export async function GET(req: Request) {
     const tripId = searchParams.get("tripId");
     console.log("Fetching with tripId:", tripId); // ✅ Add this
     const where = tripId ? { tripId } : {};
-    const labels = await prisma.label.findMany({ where });
+    
+    // Add connection retry logic
+    let retries = 3;
+    let labels;
+    
+    while (retries > 0) {
+      try {
+        labels = await prisma.label.findMany({ where });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        retries--;
+        if (retries === 0) {
+          console.error("Error fetching labels after retries:", error);
+          return NextResponse.json({ error: "Failed to fetch labels" }, { status: 500 });
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
     return NextResponse.json({ data: labels });
   } catch (error) {
     console.error("Error fetching labels:", error); // ✅ See actual error

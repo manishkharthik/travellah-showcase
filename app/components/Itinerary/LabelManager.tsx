@@ -32,7 +32,11 @@ const LabelsArea: React.FC<LabelManagerProps> = ({
   };
 
   const handleSaveLabel = async () => {
-    const newLabel = { name: labelName, color: labelColor };
+    if (!tripId) {
+      alert("Cannot create label: No trip selected.");
+      return;
+    }
+    const newLabel = { name: labelName, color: labelColor, tripId };
 
     // if i am currently editing the form
     if (editingIndex !== null) {
@@ -55,7 +59,7 @@ const LabelsArea: React.FC<LabelManagerProps> = ({
       const res = await fetch("/api/labels", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newLabel, tripId }),
+        body: JSON.stringify(newLabel),
       });
       const savedLabel = await res.json();
       setLabels((prev) => [...prev, savedLabel]);
@@ -107,7 +111,7 @@ const LabelsArea: React.FC<LabelManagerProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center basis-1/6 border-l-4 h-5/6 border-dotted border-amber-950 relative flex-col">
+    <div className="flex items-center justify-center basis-1/6 border-l-4 h-42 border-dotted border-amber-950 relative flex-col">
       {/* Show default button when no labels */}
       {!isOpen && labels.length === 0 && (
         <button
