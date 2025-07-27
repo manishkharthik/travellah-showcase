@@ -86,17 +86,15 @@ model Event {
   day             DateTime?
   timeStart       String?
   timeEnd         String?
-  tripId          String
   originalEventId String? // Track which event this is a copy of
+  labelId         String?
+  tripId          String
   label           Label?    @relation(fields: [labelId], references: [id])
   trip            Trip      @relation(fields: [tripId], references: [id])
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  labelId         String?
   notes           String?
   location        Json?
-  label           Label?    @relation(fields: [labelId], references: [id])
-  trip            Trip      @relation(fields: [tripId], references: [id])
 }
 
 model Message {

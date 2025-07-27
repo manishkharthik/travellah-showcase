@@ -810,7 +810,11 @@ const ItineraryContent = () => {
 
 // Main page component with Suspense wrapper
 const Page = () => {
-  return <ItineraryContent />;
+  return (
+    <Suspense fallback={<div>Loading itinerary...</div>}>
+      <ItineraryContent />
+    </Suspense>
+  );
 };
 
 export default Page;
